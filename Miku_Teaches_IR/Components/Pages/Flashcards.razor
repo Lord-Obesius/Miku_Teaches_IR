@@ -16,6 +16,7 @@
 
 </div>
 
+
 @if (CurrentCard is not null)
 {
     <div class="flashcard-area">
@@ -45,28 +46,32 @@
 
         </div>
 
+
         <div class="flashcard-controls">
 
             @if (!ShowingAnswer)
             {
-                <button
-                    class="primary-button"
-                    @onclick="Reveal">
+                <button class="primary-button"
+                        @onclick="Reveal">
+
                     Reveal Answer
+
                 </button>
             }
             else
             {
-                <button
-                    class="secondary-button"
-                    @onclick="ReviewAgain">
+                <button class="secondary-button"
+                        @onclick="ReviewAgain">
+
                     Review Again
+
                 </button>
 
-                <button
-                    class="primary-button"
-                    @onclick="NextCard">
+                <button class="primary-button"
+                        @onclick="NextCard">
+
                     Got It
+
                 </button>
             }
 
@@ -75,32 +80,122 @@
     </div>
 }
 
-<MikuTutor
-    Image="/images/miku-study.png"
-    Message="Don't just memorize it. Try explaining it in your own words." />
+
+<!-- MIKU -->
+
+<MikuTutor Image="@MikuImage"
+           Message="@MikuMessage" />
+
 
 @code {
 
     private List<Flashcard> Cards = new();
+
     private int CurrentIndex;
+
     private bool ShowingAnswer;
+
+
+    // =========================================================
+    // MIKU STATE
+    // =========================================================
+
+    private string MikuImage = "/images/miku-study.png";
+
+    private string MikuMessage =
+        "Don't just memorize it. Try explaining it in your own words.";
+
+
+    // =========================================================
+    // CURRENT CARD
+    // =========================================================
 
     private Flashcard? CurrentCard =>
         Cards.Count == 0
             ? null
             : Cards[CurrentIndex];
 
+
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
+
     protected override void OnInitialized()
     {
         Cards = Study.Flashcards.ToList();
+
+        MikuImage = "/images/miku-study.png";
+
+        MikuMessage = GetStartingMessage();
     }
+
+
+    // =========================================================
+    // REVEAL ANSWER
+    // =========================================================
 
     private void Reveal()
     {
         ShowingAnswer = true;
+
+        MikuImage = "/images/miku-home.png";
+
+        MikuMessage = GetRevealMessage();
     }
 
+
+    // =========================================================
+    // NEXT CARD / GOT IT
+    // =========================================================
+
     private async Task NextCard()
+    {
+        if (CurrentCard is not null)
+        {
+            await Progress.MarkFlashcardReviewed(
+                CurrentCard.Id);
+        }
+
+        MikuImage = "/images/miku-happy.png";
+
+        MikuMessage = GetGotItMessage();
+
+        CurrentIndex++;
+
+        if (CurrentIndex >= Cards.Count)
+        {
+            CurrentIndex = 0;
+        }
+
+        ShowingAnswer = false;
+    }
+
+
+    // =========================================================
+    // REVIEW AGAIN
+    // =========================================================
+
+    private async Task ReviewAgain()
+    {
+        if (CurrentCard is not null)
+        {
+            await Progress.AddToReview(
+                CurrentCard.Id);
+        }
+
+        MikuImage = "/images/miku-study.png";
+
+        MikuMessage = GetReviewMessage();
+
+        await MoveToNextCard();
+    }
+
+
+    // =========================================================
+    // MOVE TO NEXT CARD
+    // =========================================================
+
+    private async Task MoveToNextCard()
     {
         if (CurrentCard is not null)
         {
@@ -118,14 +213,96 @@
         ShowingAnswer = false;
     }
 
-    private async Task ReviewAgain()
-    {
-        if (CurrentCard is not null)
-        {
-            await Progress.AddToReview(
-                CurrentCard.Id);
-        }
 
-        await NextCard();
+    // =========================================================
+    // MIKU MESSAGES
+    // =========================================================
+
+    private string GetStartingMessage()
+    {
+        string[] messages =
+        {
+            "Don't just memorize it. Try explaining it in your own words.",
+
+            "Okay, let's see what you remember. Think before you reveal the answer!",
+
+            "Take your time. Try to answer this one without looking.",
+
+            "Ready? See if you can remember this one on your own.",
+
+            "Let's test your memory. What do you think the answer is?"
+        };
+
+        return messages[
+            Random.Shared.Next(messages.Length)
+        ];
     }
+
+
+    private string GetRevealMessage()
+    {
+        string[] messages =
+        {
+            "Okay, let's see how you did.",
+
+            "Here's the answer! Compare it with what you were thinking.",
+
+            "Let's check your answer.",
+
+            "There it is! See if you were on the right track.",
+
+            "Take a look. Does that match what you remembered?"
+        };
+
+        return messages[
+            Random.Shared.Next(messages.Length)
+        ];
+    }
+
+
+    private string GetGotItMessage()
+    {
+        string[] messages =
+        {
+            "Nice! You remembered that one!",
+
+            "Good job! That's one more card down.",
+
+            "Yep! You got it. Let's keep going!",
+
+            "Nice work! Ready for the next one?",
+
+            "Good! You're getting the hang of this.",
+
+            "That's it! Let's keep moving."
+        };
+
+        return messages[
+            Random.Shared.Next(messages.Length)
+        ];
+    }
+
+
+    private string GetReviewMessage()
+    {
+        string[] messages =
+        {
+            "That's okay! We'll come back to this one.",
+
+            "No worries. Put this one back into your review list.",
+
+            "It's okay if you missed it. Practice will make it stick.",
+
+            "We'll review this one again later. Don't give up!",
+
+            "Hmm... let's make sure you see this one again.",
+
+            "No problem! That's exactly what review is for."
+        };
+
+        return messages[
+            Random.Shared.Next(messages.Length)
+        ];
+    }
+
 }

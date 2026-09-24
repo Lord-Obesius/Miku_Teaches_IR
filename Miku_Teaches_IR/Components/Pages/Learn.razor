@@ -1,28 +1,249 @@
 ﻿@page "/learn"
 
-@inject StudyService Study
+@inject StudyService StudyService
 
-<PageTitle>Learn</PageTitle>
+<PageTitle>Learn | IR Study</PageTitle>
 
-<div class="page-heading">
+<div class="page-header">
+    <span class="eyebrow">LEARNING CENTER</span>
 
-    <span class="eyebrow">
-        THEORY LIBRARY
-    </span>
-
-    <h1>Learn the Theories</h1>
+    <h1>International Relations Theories</h1>
 
     <p>
-        Explore the major approaches to international relations.
+        Let's go through the major theories one at a time.
     </p>
-
 </div>
 
-<div class="topic-grid">
+<MikuTutor Image="/images/miku-study.png"
+           Message="@IntroMessage" />
 
-    @foreach (var topic in Study.Topics)
+<div class="learning-topics">
+
+    @foreach (var topic in StudyService.Topics)
     {
-        <TopicCard Topic="topic" />
+        var topicIndex = StudyService.Topics.ToList().IndexOf(topic);
+
+        <div class="learning-topic">
+
+            <div class="learning-topic-header">
+
+                <div>
+                    <span class="topic-number">
+                        THEORY @(topicIndex + 1)
+                    </span>
+
+                    <h2>
+                        @topic.Name
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <!-- MIKU EXPLANATION -->
+
+            <div class="miku-lesson">
+
+                <div class="miku-lesson-image">
+
+                    <img src="@GetMikuImage(topicIndex)"
+                         alt="Miku Nakano explaining @topic.Name" />
+
+                </div>
+
+                <div class="miku-lesson-bubble">
+
+                    <div class="miku-name">
+                        Miku
+                    </div>
+
+                    <p>
+                        @GetMikuExplanation(topic.Id)
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- THEORY DESCRIPTION -->
+
+            <div class="topic-description">
+
+                <p>
+                    @topic.Description
+                </p>
+
+            </div>
+
+
+            <!-- ACTOR / OBJECTIVE / METHOD -->
+
+            <div class="topic-details">
+
+                <div class="topic-detail">
+
+                    <span class="detail-label">
+                        ACTOR
+                    </span>
+
+                    <strong>
+                        @topic.Actor
+                    </strong>
+
+                </div>
+
+
+                <div class="topic-detail">
+
+                    <span class="detail-label">
+                        OBJECTIVE
+                    </span>
+
+                    <strong>
+                        @topic.Objective
+                    </strong>
+
+                </div>
+
+
+                <div class="topic-detail">
+
+                    <span class="detail-label">
+                        METHOD
+                    </span>
+
+                    <strong>
+                        @topic.Method
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- KEY IDEAS / CRITICISMS -->
+
+            <div class="topic-columns">
+
+                <div>
+
+                    <h3>
+                        Key Ideas
+                    </h3>
+
+                    <ul>
+
+                        @foreach (var idea in topic.KeyIdeas)
+                        {
+                            <li>
+                                @idea
+                            </li>
+                        }
+
+                    </ul>
+
+                </div>
+
+
+                <div>
+
+                    <h3>
+                        Criticisms
+                    </h3>
+
+                    @if (topic.Criticisms.Count > 0)
+                    {
+                        <ul>
+
+                            @foreach (var criticism in topic.Criticisms)
+                            {
+                                <li>
+                                    @criticism
+                                </li>
+                            }
+
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="no-criticisms">
+                            No criticisms added yet.
+                        </p>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
     }
 
 </div>
+
+
+@code {
+
+    private string IntroMessage =
+        "Hi! I'm Miku. I'll help you work through these theories one at a time. Don't worry if some of them seem confusing at first — we'll break them down.";
+
+
+    // =========================================================
+    // MIKU IMAGE ROTATION
+    // Happy → Home → Study → Happy → Home → Study...
+    // =========================================================
+
+    private string GetMikuImage(int index)
+    {
+        string[] images =
+        {
+            "/images/miku-happy.png",
+            "/images/miku-home.png",
+            "/images/miku-study.png"
+        };
+
+        return images[index % images.Length];
+    }
+
+
+    // =========================================================
+    // MIKU THEORY EXPLANATIONS
+    // =========================================================
+
+    private string GetMikuExplanation(string topicId)
+    {
+        return topicId switch
+        {
+            "realism" =>
+                "Let's start with Realism. The big thing to remember is power and survival. Realists see states as the main actors in an anarchic international system, so states have to look after their own security. When a state becomes more powerful, other states may respond by balancing against it.",
+
+            "liberalism" =>
+                "Liberalism has a much stronger focus on cooperation. Instead of assuming states are constantly competing, liberals argue that cooperation, institutions, and collective security can help states achieve mutual goals. Liberal thinkers also pay more attention to individuals and domestic influences.",
+
+            "neorealism" =>
+                "Neorealism keeps the focus on states and security, but it puts more emphasis on the structure of the international system. Because the international system is anarchic, states have to think about survival and the distribution of capabilities around them.",
+
+            "neoliberalism" =>
+                "Neoliberalism argues that cooperation is possible even when the international system is anarchic. International institutions can help states cooperate, and relationships between states can involve more than just military power. Think about institutions, multiple channels of interaction, and mutual gains.",
+
+            "constructivism" =>
+                "Constructivism asks a different question: where do states' interests and identities come from? Constructivists argue that identities, norms, ideas, and discourse can shape how actors understand the world. In other words, international politics isn't only about material power — social meaning matters too.",
+
+            "radicalism" =>
+                "Radical approaches focus heavily on economic structures and inequality. Instead of starting with military power or cooperation between states, radical perspectives ask how economic relationships and structures shape international politics.",
+
+            "marxism" =>
+                "Marxism looks at international politics through class and economic structures. A useful pair to remember is bourgeoisie and proletariat. Marxist analysis focuses on class struggle and the way capitalism creates divisions between economic classes.",
+
+            "dependency" =>
+                "Dependency Theory focuses on relationships between dominant and dependent economic systems. The basic idea is that some economies become dependent on more powerful economies, creating relationships that can reproduce inequality. Pay attention to who controls resources, production, and economic relationships.",
+
+            "feminism" =>
+                "Feminism is best understood here as a lens or perspective rather than one single theory. Feminist approaches ask how gender and power affect international politics and how traditional approaches may overlook certain experiences. You can apply this lens alongside other theories.",
+
+            _ =>
+                "Let's take this one step at a time. Look at the actor, objective, method, and key ideas. Those four things will help you understand how this perspective approaches international relations."
+        };
+    }
+
+}
