@@ -1,0 +1,154 @@
+﻿@page "/battle"
+@rendermode InteractiveServer
+
+@inject StudyService Study
+@inject ProgressService Progress
+
+<PageTitle>Theory Battle</PageTitle>
+
+<div class="page-heading">
+
+    <span class="eyebrow">SCENARIO MODE</span>
+
+    <h1>Theory Battle</h1>
+
+    <p>
+        Read the situation and identify which theory best explains it.
+    </p>
+
+</div>
+
+@if (Current is not null && !Finished)
+{
+    <div class="battle-card">
+
+        <div class="battle-scenario">
+
+            <span>SCENARIO</span>
+
+            <p>@Current.Scenario</p>
+
+        </div>
+
+        <div class="answer-grid">
+
+            @for (int i = 0; i < Current.Choices.Count; i++)
+            {
+                var index = i;
+
+                <button
+                    class="answer-button"
+                    disabled="@Answered"
+                    @onclick="() => Answer(index)">
+
+                    @Current.Choices[index]
+
+                </button>
+            }
+
+        </div>
+
+        @if (Answered)
+        {
+            <div class="quiz-feedback">
+
+                <p>@Current.Explanation</p>
+
+                <button
+                    class="primary-button"
+                    @onclick="Next">
+                    Continue
+                </button>
+
+            </div>
+        }
+
+    </div>
+}
+
+@if (Finished)
+{
+    <div class="results-card">
+
+        <MikuTutor
+            Image="/images/miku-happy.png"
+            Message="You made it through the battle." />
+
+        <h2>Battle Complete</h2>
+
+        <p>
+            Score: @Score / @Battles.Count
+        </p>
+
+        <button
+            class="primary-button"
+            @onclick="Restart">
+            Battle Again
+        </button>
+
+    </div>
+}
+
+@code {
+
+    private List<BattleScenario> Battles = new();
+
+    private int CurrentIndex;
+    private int Score;
+
+    private bool Answered;
+    private bool Finished;
+
+    private BattleScenario? Current =>
+        Battles.Count == 0
+            ? null
+            : Battles[CurrentIndex];
+
+    protected override void OnInitialized()
+    {
+        Restart();
+    }
+
+    private void Restart()
+    {
+        Battles = Study.Battles
+            .OrderBy(_ => Random.Shared.Next())
+            .ToList();
+
+        CurrentIndex = 0;
+        Score = 0;
+        Answered = false;
+        Finished = false;
+    }
+
+    private async Task Answer(int index)
+    {
+        if (Answered || Current is null)
+            return;
+
+        Answered = true;
+
+        bool correct =
+            index == Current.CorrectChoice;
+
+        if (correct)
+        {
+            Score++;
+        }
+
+        await Progress.RecordAnswer(correct);
+    }
+
+    private void Next()
+    {
+        CurrentIndex++;
+
+        if (CurrentIndex >= Battles.Count)
+        {
+            Finished = true;
+            return;
+        }
+
+        Answered = false;
+    }
+}

@@ -1,0 +1,118 @@
+﻿@page "/matching"
+@rendermode InteractiveServer
+
+@inject StudyService Study
+@inject ProgressService Progress
+
+<PageTitle>Matching</PageTitle>
+
+<div class="page-heading">
+
+    <span class="eyebrow">MEMORY MODE</span>
+
+    <h1>Match the Theory</h1>
+
+    <p>
+        Match each theory with its defining concept.
+    </p>
+
+</div>
+
+<div class="matching-grid">
+
+    @foreach (var topic in Topics)
+    {
+        <button class="match-card @(SelectedTopic == topic ? "selected" : "")"
+                @onclick="() => SelectTopic(topic)">
+
+            @topic.Name
+
+        </button>
+    }
+
+</div>
+
+@if (SelectedTopic is not null)
+{
+    <div class="match-options">
+
+        <h3>
+            What is associated with @SelectedTopic.Name?
+        </h3>
+
+        @foreach (var option in CurrentOptions)
+        {
+            <button class="answer-button"
+                    @onclick="() => CheckMatch(option)">
+
+                @option
+
+            </button>
+        }
+
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="quiz-feedback">
+
+        <p>@Message</p>
+
+    </div>
+}
+
+@code {
+
+    private List<StudyTopic> Topics = new();
+
+    private StudyTopic? SelectedTopic;
+
+    private List<string> CurrentOptions = new();
+
+    private string Message = "";
+
+    protected override void OnInitialized()
+    {
+        Topics = Study.Topics
+            .OrderBy(_ => Random.Shared.Next())
+            .Take(6)
+            .ToList();
+    }
+
+    private void SelectTopic(StudyTopic topic)
+    {
+        SelectedTopic = topic;
+
+        CurrentOptions = Topics
+            .Select(x => x.Objective)
+            .OrderBy(_ => Random.Shared.Next())
+            .ToList();
+
+        Message = "";
+    }
+
+    private async Task CheckMatch(string answer)
+    {
+        if (SelectedTopic is null)
+            return;
+
+        bool correct =
+            answer == SelectedTopic.Objective;
+
+        if (correct)
+        {
+            Message = "Correct!";
+
+            await Progress.AddXP(10);
+
+            Topics.Remove(SelectedTopic);
+
+            SelectedTopic = null;
+        }
+        else
+        {
+            Message = "Not quite. Try again.";
+        }
+    }
+}

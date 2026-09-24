@@ -1,0 +1,35 @@
+﻿<div class="miku-tutor">
+
+    <div class="miku-container">
+        <div class="miku-glow"></div>
+
+        <img src="@Image"
+             alt="Miku Nakano"
+             class="miku-image" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="miku-message">
+            <div class="miku-name">
+                Miku
+            </div>
+
+            <div class="miku-speech">
+                @Message
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public string Image { get; set; } = "/images/miku-home.png";
+
+    [Parameter]
+    public string Message { get; set; } = "";
+
+    [Parameter]
+    public string Mood { get; set; } = "normal";
+}

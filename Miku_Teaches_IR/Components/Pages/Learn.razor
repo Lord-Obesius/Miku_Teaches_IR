@@ -1,0 +1,28 @@
+﻿@page "/learn"
+
+@inject StudyService Study
+
+<PageTitle>Learn</PageTitle>
+
+<div class="page-heading">
+
+    <span class="eyebrow">
+        THEORY LIBRARY
+    </span>
+
+    <h1>Learn the Theories</h1>
+
+    <p>
+        Explore the major approaches to international relations.
+    </p>
+
+</div>
+
+<div class="topic-grid">
+
+    @foreach (var topic in Study.Topics)
+    {
+        <TopicCard Topic="topic" />
+    }
+
+</div>

@@ -1,0 +1,369 @@
+﻿@page "/quiz"
+@rendermode InteractiveServer
+
+@inject StudyService StudyService
+@inject ProgressService ProgressService
+
+<PageTitle>Quiz | IR Study</PageTitle>
+
+<div class="page-header">
+    <span class="eyebrow">TEST YOURSELF</span>
+
+    <h1>International Relations Quiz</h1>
+
+    <p>
+        Let's see what you've learned.
+    </p>
+</div>
+
+@if (!QuizFinished)
+{
+    <MikuTutor Image="@MikuImage"
+               Message="@MikuMessage" />
+
+    @if (CurrentQuestion is not null)
+    {
+        <div class="quiz-card">
+
+            <div class="quiz-progress">
+                Question @(CurrentQuestionIndex + 1) / @Questions.Count
+            </div>
+
+            <h2>
+                @CurrentQuestion.Question
+            </h2>
+
+            <div class="quiz-answers">
+
+                @for (int i = 0; i < CurrentQuestion.Answers.Count; i++)
+                {
+                    var answerIndex = i;
+
+                    <button class="@GetAnswerClass(answerIndex)"
+                            @onclick="() => AnswerQuestion(answerIndex)"
+                            disabled="@Answered">
+
+                        @CurrentQuestion.Answers[answerIndex]
+
+                    </button>
+                }
+
+            </div>
+
+            @if (Answered)
+            {
+                <div class="quiz-explanation">
+
+                    @if (LastAnswerCorrect)
+                    {
+                        <strong>✓ Correct!</strong>
+                    }
+                    else
+                    {
+                        <strong>✗ Not quite.</strong>
+                    }
+
+                    <p>
+                        @CurrentQuestion.Explanation
+                    </p>
+
+                    <button class="primary-button"
+                            @onclick="NextQuestion">
+
+                        @(CurrentQuestionIndex == Questions.Count - 1
+                            ? "See Results"
+                            : "Next Question")
+
+                    </button>
+
+                </div>
+            }
+
+        </div>
+    }
+}
+else
+{
+    <MikuTutor Image="@MikuImage"
+               Message="@MikuMessage" />
+
+    <div class="quiz-results">
+
+        <span class="eyebrow">
+            QUIZ COMPLETE
+        </span>
+
+        <h1>
+            @Score / @Questions.Count
+        </h1>
+
+        <p class="quiz-result-message">
+            @ResultMessage
+        </p>
+
+        <div class="quiz-result-stats">
+
+            <div>
+                <strong>@Score</strong>
+                <span>Correct</span>
+            </div>
+
+            <div>
+                <strong>@Questions.Count</strong>
+                <span>Questions</span>
+            </div>
+
+            <div>
+                <strong>@GetAccuracy()%</strong>
+                <span>Accuracy</span>
+            </div>
+
+        </div>
+
+        <button class="primary-button"
+                @onclick="RestartQuiz">
+
+            Try Again
+
+        </button>
+
+    </div>
+}
+
+@code {
+
+    private List<QuizQuestion> Questions = new();
+
+    private int CurrentQuestionIndex = 0;
+
+    private int Score = 0;
+
+    private bool Answered = false;
+
+    private bool LastAnswerCorrect = false;
+
+    private bool QuizFinished = false;
+
+    private string MikuImage = "/images/miku-home.png";
+
+    private string MikuMessage =
+        "Okay! Let's see what you remember. Take your time!";
+
+    private string ResultMessage = "";
+
+
+    private QuizQuestion? CurrentQuestion =>
+        Questions.Count > CurrentQuestionIndex
+            ? Questions[CurrentQuestionIndex]
+            : null;
+
+
+    protected override void OnInitialized()
+    {
+        StartNewQuiz();
+    }
+
+
+    private void StartNewQuiz()
+    {
+        Questions = StudyService.QuizQuestions
+            .OrderBy(x => Random.Shared.Next())
+            .Take(5)
+            .ToList();
+
+        CurrentQuestionIndex = 0;
+
+        Score = 0;
+
+        Answered = false;
+
+        LastAnswerCorrect = false;
+
+        QuizFinished = false;
+
+        MikuImage = "/images/miku-home.png";
+
+        MikuMessage =
+            "Okay! Let's see what you remember. Take your time!";
+    }
+
+
+    private async Task AnswerQuestion(int answerIndex)
+    {
+        if (Answered || CurrentQuestion is null)
+        {
+            return;
+        }
+
+        Answered = true;
+
+        LastAnswerCorrect =
+            answerIndex == CurrentQuestion.CorrectAnswer;
+
+
+        await ProgressService.RecordAnswer(LastAnswerCorrect);
+
+
+        if (LastAnswerCorrect)
+        {
+            Score++;
+
+            MikuImage = "/images/miku-happy.png";
+
+            MikuMessage = GetCorrectMessage();
+        }
+        else
+        {
+            MikuImage = "/images/miku-wrong.png";
+
+            MikuMessage =
+                $"Not quite! Don't worry. Let's look at why. {CurrentQuestion.Explanation}";
+        }
+    }
+
+
+    private async Task NextQuestion()
+    {
+        if (CurrentQuestionIndex >= Questions.Count - 1)
+        {
+            FinishQuiz();
+
+            return;
+        }
+
+        CurrentQuestionIndex++;
+
+        Answered = false;
+
+        LastAnswerCorrect = false;
+
+        MikuImage = "/images/miku-study.png";
+
+        MikuMessage =
+            "Okay, next one! Think carefully before you choose.";
+    }
+
+
+    private void FinishQuiz()
+    {
+        QuizFinished = true;
+
+        MikuImage = GetResultImage();
+
+        MikuMessage = GetResultMessage();
+
+        ResultMessage = MikuMessage;
+    }
+
+
+    private void RestartQuiz()
+    {
+        StartNewQuiz();
+
+        MikuMessage =
+            "Round two! Let's see if you can beat your last score.";
+    }
+
+
+    private string GetCorrectMessage()
+    {
+        string[] messages =
+        {
+            "Nice! You got it!",
+
+            "Correct! I knew you could do it.",
+
+            "That's right! Keep going!",
+
+            "Yes! You remembered it!",
+
+            "Exactly! You're getting this.",
+
+            "Good job! Let's keep going.",
+
+            "That's it! You understand this one."
+        };
+
+        return messages[
+            Random.Shared.Next(messages.Length)
+        ];
+    }
+
+
+    private string GetResultMessage()
+    {
+        return Score switch
+        {
+            0 =>
+                "You got 0/5, but that's okay! This is what studying is for. Let's review the material and try again.",
+
+            1 =>
+                "You got 1/5! That's a start. Now we know what we need to work on.",
+
+            2 =>
+                "You got 2/5! You're starting to get there. A little more review and you'll have it.",
+
+            3 =>
+                "You got 3/5! Nice work! You understand a good chunk of the material.",
+
+            4 =>
+                "You got 4/5! Almost perfect! You clearly know a lot about these theories.",
+
+            5 =>
+                "5/5! Perfect score! You absolutely crushed it!",
+
+            _ =>
+                "Nice work! Let's keep studying."
+        };
+    }
+
+
+    private string GetResultImage()
+    {
+        return Score switch
+        {
+            0 => "/images/miku-wrong.png",
+
+            1 => "/images/miku-wrong.png",
+
+            2 => "/images/miku-thinking.png",
+
+            3 => "/images/miku-happy.png",
+
+            4 => "/images/miku-happy.png",
+
+            5 => "/images/miku-happy.png",
+
+            _ => "/images/miku-home.png"
+        };
+    }
+
+
+    private string GetAnswerClass(int index)
+    {
+        if (!Answered)
+        {
+            return "quiz-answer";
+        }
+
+        if (index == CurrentQuestion?.CorrectAnswer)
+        {
+            return "quiz-answer correct";
+        }
+
+        return "quiz-answer";
+    }
+
+
+    private int GetAccuracy()
+    {
+        if (Questions.Count == 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round(
+            (double)Score / Questions.Count * 100
+        );
+    }
+}

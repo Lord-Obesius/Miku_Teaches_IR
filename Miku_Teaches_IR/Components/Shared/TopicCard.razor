@@ -1,0 +1,50 @@
+﻿<div class="topic-card">
+
+    <div class="topic-header">
+
+        <h2>@Topic.Name</h2>
+
+    </div>
+
+    <p class="topic-description">
+        @Topic.Description
+    </p>
+
+    <div class="topic-info">
+
+        <div>
+            <span>ACTOR</span>
+            <p>@Topic.Actor</p>
+        </div>
+
+        <div>
+            <span>OBJECTIVE</span>
+            <p>@Topic.Objective</p>
+        </div>
+
+        <div>
+            <span>HOW</span>
+            <p>@Topic.Method</p>
+        </div>
+
+    </div>
+
+    <h3>Key Ideas</h3>
+
+    <ul>
+
+        @foreach (var idea in Topic.KeyIdeas)
+        {
+            <li>@idea</li>
+        }
+
+    </ul>
+
+</div>
+
+@code {
+
+    [Parameter, EditorRequired]
+    public StudyTopic Topic { get; set; } = null!;
+
+}

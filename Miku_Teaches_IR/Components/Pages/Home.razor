@@ -1,0 +1,86 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@inject ProgressService Progress
+
+<PageTitle>IR Study</PageTitle>
+
+<div class="hero">
+
+    <div class="hero-text">
+
+        <span class="eyebrow">
+            INTERNATIONAL RELATIONS
+        </span>
+
+        <h1>
+            Study smarter.<br />
+            Understand IR.
+        </h1>
+
+        <p>
+            Learn theories, test yourself, and build your
+            understanding of international relations.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="/learn" class="primary-button">
+                Start Learning
+            </a>
+
+            <a href="/quiz" class="secondary-button">
+                Take a Quiz
+            </a>
+
+        </div>
+
+    </div>
+
+    <MikuTutor
+        Image="/images/miku-home.png"
+        Message="Let's study international relations together." />
+
+</div>
+
+<div class="dashboard-grid">
+
+    <div class="stat-card">
+
+        <span>XP</span>
+
+        <strong>@Progress.Progress.XP</strong>
+
+    </div>
+
+    <div class="stat-card">
+
+        <span>QUESTIONS</span>
+
+        <strong>
+            @Progress.Progress.QuestionsAnswered
+        </strong>
+
+    </div>
+
+    <div class="stat-card">
+
+        <span>ACCURACY</span>
+
+        <strong>
+            @Math.Round(Progress.Accuracy)%
+        </strong>
+
+    </div>
+
+    <div class="stat-card">
+
+        <span>REVIEW</span>
+
+        <strong>
+            @Progress.Progress.ReviewAgain.Count
+        </strong>
+
+    </div>
+
+</div>

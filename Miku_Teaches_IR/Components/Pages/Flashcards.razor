@@ -1,0 +1,131 @@
+﻿@page "/flashcards"
+@rendermode InteractiveServer
+
+@inject StudyService Study
+@inject ProgressService Progress
+
+<PageTitle>Flashcards</PageTitle>
+
+<div class="page-heading">
+
+    <span class="eyebrow">ACTIVE RECALL</span>
+
+    <h1>Flashcards</h1>
+
+    <p>Test yourself before revealing the answer.</p>
+
+</div>
+
+@if (CurrentCard is not null)
+{
+    <div class="flashcard-area">
+
+        <div class="flashcard @(ShowingAnswer ? "flipped" : "")">
+
+            <div class="flashcard-content">
+
+                @if (!ShowingAnswer)
+                {
+                    <span class="flashcard-label">
+                        QUESTION
+                    </span>
+
+                    <h2>@CurrentCard.Question</h2>
+                }
+                else
+                {
+                    <span class="flashcard-label">
+                        ANSWER
+                    </span>
+
+                    <h2>@CurrentCard.Answer</h2>
+                }
+
+            </div>
+
+        </div>
+
+        <div class="flashcard-controls">
+
+            @if (!ShowingAnswer)
+            {
+                <button
+                    class="primary-button"
+                    @onclick="Reveal">
+                    Reveal Answer
+                </button>
+            }
+            else
+            {
+                <button
+                    class="secondary-button"
+                    @onclick="ReviewAgain">
+                    Review Again
+                </button>
+
+                <button
+                    class="primary-button"
+                    @onclick="NextCard">
+                    Got It
+                </button>
+            }
+
+        </div>
+
+    </div>
+}
+
+<MikuTutor
+    Image="/images/miku-study.png"
+    Message="Don't just memorize it. Try explaining it in your own words." />
+
+@code {
+
+    private List<Flashcard> Cards = new();
+    private int CurrentIndex;
+    private bool ShowingAnswer;
+
+    private Flashcard? CurrentCard =>
+        Cards.Count == 0
+            ? null
+            : Cards[CurrentIndex];
+
+    protected override void OnInitialized()
+    {
+        Cards = Study.Flashcards.ToList();
+    }
+
+    private void Reveal()
+    {
+        ShowingAnswer = true;
+    }
+
+    private async Task NextCard()
+    {
+        if (CurrentCard is not null)
+        {
+            await Progress.MarkFlashcardReviewed(
+                CurrentCard.Id);
+        }
+
+        CurrentIndex++;
+
+        if (CurrentIndex >= Cards.Count)
+        {
+            CurrentIndex = 0;
+        }
+
+        ShowingAnswer = false;
+    }
+
+    private async Task ReviewAgain()
+    {
+        if (CurrentCard is not null)
+        {
+            await Progress.AddToReview(
+                CurrentCard.Id);
+        }
+
+        await NextCard();
+    }
+}

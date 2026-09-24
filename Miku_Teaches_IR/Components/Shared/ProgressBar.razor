@@ -1,0 +1,29 @@
+﻿<div class="progress-wrapper">
+
+    <div class="progress-label">
+
+        <span>@Label</span>
+
+        <span>@Math.Round(Value)%</span>
+
+    </div>
+
+    <div class="progress-track">
+
+        <div class="progress-fill"
+             style="width:@Value%">
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string Label { get; set; } = "Progress";
+
+    [Parameter]
+    public double Value { get; set; }
+
+}

@@ -1,0 +1,87 @@
+﻿@page "/review"
+@rendermode InteractiveServer
+
+@inject StudyService Study
+@inject ProgressService Progress
+
+<PageTitle>Review Again</PageTitle>
+
+<div class="page-heading">
+
+    <span class="eyebrow">WEAK AREAS</span>
+
+    <h1>Review Again</h1>
+
+    <p>
+        Flashcards you've marked for another review.
+    </p>
+
+</div>
+
+@if (ReviewCards.Count == 0)
+{
+    <div class="empty-state">
+
+        <MikuTutor
+            Image="/images/miku-happy.png"
+            Message="Nothing here yet. Mark difficult flashcards for review while studying." />
+
+        <h2>No cards to review</h2>
+
+    </div>
+}
+else
+{
+    <div class="review-list">
+
+        @foreach (var card in ReviewCards)
+        {
+            <div class="review-card">
+
+                <div>
+
+                    <span>QUESTION</span>
+
+                    <h3>@card.Question</h3>
+
+                    <p>@card.Answer</p>
+
+                </div>
+
+                <button
+                    class="secondary-button"
+                    @onclick="() => Remove(card.Id)">
+                    Remove
+                </button>
+
+            </div>
+        }
+
+    </div>
+}
+
+@code {
+
+    private List<Flashcard> ReviewCards = new();
+
+    protected override void OnInitialized()
+    {
+        LoadReviewCards();
+    }
+
+    private void LoadReviewCards()
+    {
+        ReviewCards = Study.Flashcards
+            .Where(x =>
+                Progress.Progress.ReviewAgain
+                    .Contains(x.Id))
+            .ToList();
+    }
+
+    private async Task Remove(int id)
+    {
+        await Progress.RemoveFromReview(id);
+
+        LoadReviewCards();
+    }
+}
